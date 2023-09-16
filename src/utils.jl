@@ -1,4 +1,5 @@
 using JSON
+using .Terms
 
 function parse_json_ast_to_term(json_ast::Dict)::Term
     if json_ast["kind"] == "Int"
@@ -37,14 +38,14 @@ function parse_json_ast_to_term(json_ast::Dict)::Term
         return _Var(json_ast["text"], Location(json_ast["location"]["start"], json_ast["location"]["end"], json_ast["location"]["filename"]))
     elseif json_ast["kind"] == "Function"
         return _Function(
-            [_Var(param["text"], Location(param["location"]["start"], param["location"]["end"], param["location"]["filename"])) for param in json_ast["parameters"]],
+            [_Var(param["text"], Location(param["location"]["start"], param["location"]["end"], param["location"]["filename"])) for param ∈ json_ast["parameters"]],
             parse_json_ast_to_term(json_ast["value"]),
             Location(json_ast["location"]["start"], json_ast["location"]["end"], json_ast["location"]["filename"])
         )
     elseif json_ast["kind"] == "Call"
         return _Call(
             parse_json_ast_to_term(json_ast["callee"]),
-            [parse_json_ast_to_term(param) for param in json_ast["arguments"]],
+            [parse_json_ast_to_term(param) for param ∈ json_ast["arguments"]],
             Location(json_ast["location"]["start"], json_ast["location"]["end"], json_ast["location"]["filename"])
         )
     elseif json_ast["kind"] == "Error"

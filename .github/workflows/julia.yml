@@ -1,0 +1,35 @@
+name: Julia
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_test:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up cargo cache
+      uses: actions/cache@v3
+      continue-on-error: false
+      with:
+        path: |
+          ~/.julia/registries
+          ~/.julia/environments
+        
+        key: ${{ runner.os }}-julia-${{ hashFiles('**/Project.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-julia-
+
+    - name: Build and run docker image
+      run: |
+        docker build -t rinha .
+        docker run rinha

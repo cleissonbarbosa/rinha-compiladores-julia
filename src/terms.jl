@@ -1,3 +1,6 @@
+module Terms
+export Location, BinaryOp, Term, _Int, _Str, _Bool, _Binary, _Var, _Call, _Function, _Print, _First, _Second, _Tuple, _Error, _If, _Let, File, from_str_binaryOp
+
 struct Location
     start::Int
     endd::Int
@@ -55,11 +58,11 @@ mutable struct _Var <: Term
 end    
 struct _Call <: Term
     callee::Term
-    arguments::Vector{Term}
+    arguments::AbstractVector{Term}
     location::Location
 end
 struct _Function <: Term
-    parameters::Vector{_Var}
+    parameters::AbstractVector{_Var}
     value::Term
     location::Location
 end
@@ -104,13 +107,4 @@ struct File
     location::Location
 end
 
-function fmt_expected(expected::Vector{String})::String
-    f = ""
-    if !isempty(expected)
-        for (i, e) in enumerate(expected)
-            sep = i == 1 ? "expected one of" : (i < length(expected) ? "," : " or")
-            f *= " $sep $e"
-        end
-    end
-    return f
 end

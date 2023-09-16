@@ -1,15 +1,12 @@
-include("terms.jl")
-include("utils.jl")
-
 using ErrorTypes
-
+using .Terms
 struct Closure
     body::Term
-    params::Vector{_Var}
+    params::AbstractVector{_Var}
     env::Dict{String, Any}
 end
 
-function eval_core(term::Term, scope::Dict{String, Any})
+@noinline function eval_core(term::Term, scope::Dict{String, Any})
     if isa(term, _Int)
         return term.value
     elseif isa(term, _Str)
@@ -63,7 +60,7 @@ function eval_core(term::Term, scope::Dict{String, Any})
             
             new_scope = copy(scope)
             
-            for (param, arg) in zip(params, term.arguments)
+            for (param, arg) ∈ zip(params, term.arguments)
                 new_scope[param.text] = eval_core(arg, scope)
             end
             
@@ -80,7 +77,7 @@ function eval_core(term::Term, scope::Dict{String, Any})
 end
 
 function eval_bin(bin::_Binary, scope::Dict{String, Any})
-    if bin.op == Add
+    if bin.op == Terms.Add
         lhs = eval_core(bin.lhs, scope)
         rhs = eval_core(bin.rhs, scope)
         if isa(lhs, Int) && isa(rhs, Int)
@@ -94,29 +91,29 @@ function eval_bin(bin::_Binary, scope::Dict{String, Any})
         else
             throw(ErrorException("tipo inválido"))
         end
-    elseif bin.op == Sub
+    elseif bin.op == Terms.Sub
         return eval_core(bin.lhs, scope) - eval_core(bin.rhs, scope)
-    elseif bin.op == Mul
+    elseif bin.op == Terms.Mul
         return eval_core(bin.lhs, scope) * eval_core(bin.rhs, scope)
-    elseif bin.op == Div
+    elseif bin.op == Terms.Div
         return eval_core(bin.lhs, scope) / eval_core(bin.rhs, scope)
-    elseif bin.op == Rem
+    elseif bin.op == Terms.Rem
         return eval_core(bin.lhs, scope) % eval_core(bin.rhs, scope)
-    elseif  bin.op == Lt
+    elseif  bin.op == Terms.Lt
         return eval_core(bin.lhs, scope) < eval_core(bin.rhs, scope)
-    elseif bin.op == Eq
+    elseif bin.op == Terms.Eq
         return eval_core(bin.lhs, scope) == eval_core(bin.rhs, scope)
-    elseif bin.op == Gt
+    elseif bin.op == Terms.Gt
         return eval_core(bin.lhs, scope) > eval_core(bin.rhs, scope)
-    elseif bin.op == Lte
+    elseif bin.op == Terms.Lte
         return eval_core(bin.lhs, scope) <= eval_core(bin.rhs, scope)
-    elseif bin.op == Gte
+    elseif bin.op == Terms.Gte
         return eval_core(bin.lhs, scope) >= eval_core(bin.rhs, scope)
-    elseif bin.op == Neq
+    elseif bin.op == Terms.Neq
         return eval_core(bin.lhs, scope) != eval_core(bin.rhs, scope)
-    elseif bin.op == And
+    elseif bin.op == Terms.And
         return eval_core(bin.lhs, scope) && eval_core(bin.rhs, scope)
-    elseif bin.op == Or
+    elseif bin.op == Terms.Or
         return eval_core(bin.lhs, scope) || eval_core(bin.rhs, scope)
     else
         throw(ErrorException("unknown binary operator"))

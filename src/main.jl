@@ -1,14 +1,12 @@
+include("terms.jl")
+include("utils.jl")
 include("eval.jl")
-import Base.Threads: @async, @spawn
-import Dates: now
 
-using Dates
 using ArgParse
 using ErrorTypes
 
 function parse_command_line(args)::Dict{String, Any}
     s = ArgParseSettings()
-
     @add_arg_table s begin
         "--file"
             help="The file to be executed"
@@ -19,12 +17,12 @@ function parse_command_line(args)::Dict{String, Any}
     return parse_args(args, s)
 end
 
+args = ARGS
+parsed_args = parse_command_line(args)  # Store the result in a separate variable
+
 function main()
-    time_init = time()
-    args = ARGS
-    parsed_args = parse_command_line(args)  # Store the result in a separate variable
-    program = nothing
-    for (arg, val) in parsed_args
+    program = File("", _Error("", "", Location(0, 0, "")), Location(0, 0, ""))
+    for (arg, val) ∈ parsed_args
         file = try
             read(`./lib/bin/rinha $(val)`, String)
         catch e
@@ -47,15 +45,12 @@ function main()
                 error("evaluation error: $e")
             end
 
-            time_end = time() - time_init
-            println("\n\n\nExecution Time: $time_end seconds\n")
-
             if string(val) == "nothing"
-                print("")
+                print("\n\n")
                 return
             end
 
-            println("\n$val")
+            println("$val\n\n")
         end
     catch e
         error("thread error: $e")
@@ -63,4 +58,4 @@ function main()
     wait(handle)
 end
 
-main()
+@time @elapsed main()
