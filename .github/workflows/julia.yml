@@ -22,14 +22,12 @@ jobs:
       continue-on-error: false
       with:
         path: |
-          ~/.julia/registries
-          ~/.julia/environments
-        
+          ~/.julia/registries/
+          ~/.julia/environments/
         key: ${{ runner.os }}-julia-${{ hashFiles('**/Project.toml') }}
         restore-keys: |
           ${{ runner.os }}-julia-
 
     - name: Build and run docker image
       run: |
-        docker build -t rinha .
-        docker run rinha
+        docker build -t rinha . 2> build.log && docker run rinha

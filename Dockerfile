@@ -2,7 +2,7 @@ FROM julia:latest
 
 WORKDIR /app
 COPY ./src /app
-COPY ./data /app/data
+COPY ./examples /app/data
 COPY ./lib /app/lib
 
 # Instale as dependências
@@ -17,6 +17,7 @@ RUN echo "#!/bin/sh" >> /app/run.sh
 RUN echo "julia main.jl --file=./data/fib.rinha" >> /app/run.sh
 RUN echo "julia main.jl --file=./data/combination.rinha" >> /app/run.sh
 RUN echo "julia main.jl --file=./data/sum.rinha" >> /app/run.sh
+RUN echo "julia main.jl --file=./data/print.rinha" >> /app/run.sh
 
 RUN chmod +x ./lib/bin/rinha
 
