@@ -30,3 +30,5 @@ julia main.jl --file="./data/fib.rinha"
 ---
 
 [Challenge Repo](https://github.com/aripiprazole/rinha-de-compiler)
+
+[LICENSE](LICENSE)
