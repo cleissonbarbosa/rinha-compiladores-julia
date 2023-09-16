@@ -18,4 +18,6 @@ RUN echo "julia main.jl --file=./data/fib.rinha" >> /app/run.sh
 RUN echo "julia main.jl --file=./data/combination.rinha" >> /app/run.sh
 RUN echo "julia main.jl --file=./data/sum.rinha" >> /app/run.sh
 
+RUN chmod +x ./lib/bin/rinha
+
 ENTRYPOINT ["/bin/bash", "/app/run.sh"]
