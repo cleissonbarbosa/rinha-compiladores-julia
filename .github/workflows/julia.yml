@@ -6,8 +6,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  CARGO_TERM_COLOR: always
+  JULIA_CACHE: '1'
+  JULIA_NUM_THREADS: 'auto'
 
 jobs:
   build_test:
@@ -20,10 +25,9 @@ jobs:
     - name: Set up Julia cache
       uses: actions/cache@v3
       continue-on-error: false
+      if: ${{ env.JULIA_CACHE != '0'}}
       with:
-        path: |
-          ~/.julia/registries/
-          ~/.julia/environments/
+        path: ~/.julia
         key: ${{ runner.os }}-julia-${{ hashFiles('**/Project.toml') }}
         restore-keys: |
           ${{ runner.os }}-julia-
