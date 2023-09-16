@@ -6,6 +6,8 @@
 
 ---
 
+[![Julia](https://github.com/cleissonbarbosa/rinha-compiladores-julia/actions/workflows/julia.yml/badge.svg)](https://github.com/cleissonbarbosa/rinha-compiladores-julia/actions/workflows/julia.yml)
+
 Simple interpreter for the "rinha de compiladores" challenge
 
 ⚠️ **Notice**
