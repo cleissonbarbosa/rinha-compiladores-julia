@@ -7,53 +7,47 @@ struct Closure
 end
 
 @noinline function eval_core(term::Term, scope::Dict{String, Any})
-    if isa(term, _Int)
+    if term isa _Int
         return term.value
-    elseif isa(term, _Str)
+    elseif term isa _Str
         return term.value
-    elseif isa(term, _Bool)
+    elseif term isa _Bool
         return Bool(term.value)
-    elseif isa(term, _Print)
+    elseif term isa _Print
         __value = eval_core(term.value, scope)
-        if isa(__value, Int)
-            print(__value)
-        elseif isa(__value, Bool)
-            print(__value)
-        elseif isa(__value, String)
+        if __value isa Int || __value isa Bool || __value isa String
             print(__value)
         else
             throw(ErrorException("tipo inválido"))
         end
         return nothing
-    elseif isa(term, _Binary)
+    elseif term isa _Binary
         return eval_bin(term, scope)
-    elseif isa(term, _If)
+    elseif term isa _If
         condition_value = eval_core(term.condition, scope)
-        if isa(condition_value, Bool) && condition_value
-            return eval_core(term.then, scope)
-        elseif isa(condition_value, Bool) && !condition_value
-            return eval_core(term.otherwise, scope)
+        if condition_value isa Bool
+            return condition_value ? eval_core(term.then, scope) : eval_core(term.otherwise, scope)
         else
             throw(ErrorException("tipo inválido"))
         end
-    elseif isa(term, _Let)
+    elseif term isa _Let
         name = term.name.text
         value = eval_core(term.value, scope)
         new_scope = copy(scope)
         new_scope[name] = value
         return eval_core(term.next, new_scope)
-    elseif isa(term, _Var)
+    elseif term isa _Var
         if haskey(scope, term.text)
             return scope[term.text]
         else
             throw(ErrorException("variável não definida"))
         end
-    elseif isa(term, _Function)
+    elseif term isa _Function
         return Closure(term.value, term.parameters, scope)
-    elseif isa(term, _Call)
+    elseif term isa _Call
         callee_value = eval_core(term.callee, scope)
     
-        if isa(callee_value, Any) && callee_value isa Closure
+        if callee_value isa Closure
             body = callee_value.body
             params = callee_value.params
             env = callee_value.env
@@ -69,7 +63,7 @@ end
         else
             throw(ErrorException("tipo inválido"))
         end
-    elseif isa(term, _Error)
+    elseif term isa _Error
         throw(ErrorException(term.message))
     else
         throw(ErrorException("tipo inválido"))
@@ -80,13 +74,13 @@ function eval_bin(bin::_Binary, scope::Dict{String, Any})
     if bin.op == Terms.Add
         lhs = eval_core(bin.lhs, scope)
         rhs = eval_core(bin.rhs, scope)
-        if isa(lhs, Int) && isa(rhs, Int)
+        if lhs isa Int && rhs isa Int
             return lhs + rhs
-        elseif isa(lhs, String) && isa(rhs, String)
+        elseif lhs isa String && rhs isa String
             return string(lhs, rhs)
-        elseif isa(lhs, String) && isa(rhs, Int)
+        elseif lhs isa String && rhs isa Int
             return string(lhs, rhs)
-        elseif isa(lhs, Int) && isa(rhs, String)
+        elseif lhs isa Int && rhs isa String
             return string(lhs, rhs)
         else
             throw(ErrorException("tipo inválido"))
