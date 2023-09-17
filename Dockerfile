@@ -14,10 +14,10 @@ ENV JULIA_PKGDIR=/app/.julia
 ENV JULIA_NUM_THREADS=4
 
 RUN echo "#!/bin/sh" >> /app/run.sh
-RUN echo "julia main.jl --file=./data/fib.rinha" >> /app/run.sh
-RUN echo "julia main.jl --file=./data/combination.rinha" >> /app/run.sh
-RUN echo "julia main.jl --file=./data/sum.rinha" >> /app/run.sh
-RUN echo "julia main.jl --file=./data/print.rinha" >> /app/run.sh
+RUN echo "julia main.jl --file=./data/fib.json" >> /app/run.sh
+RUN echo "julia main.jl --file=./data/combination.json" >> /app/run.sh
+RUN echo "julia main.jl --file=./data/sum.json" >> /app/run.sh
+RUN echo "julia main.jl --file=./data/print.json" >> /app/run.sh
 
 RUN chmod +x ./lib/bin/rinha
 

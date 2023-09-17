@@ -31,10 +31,9 @@ end
             throw(ErrorException("tipo inválido"))
         end
     elseif term isa _Let
-        name = term.name.text
         value = eval_core(term.value, scope)
         new_scope = copy(scope)
-        new_scope[name] = value
+        new_scope[term.name.text] = value
         return eval_core(term.next, new_scope)
     elseif term isa _Var
         if haskey(scope, term.text)

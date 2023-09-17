@@ -24,7 +24,7 @@ function main()
     program = File("", _Error("", "", Location(0, 0, "")), Location(0, 0, ""))
     for (arg, val) ∈ parsed_args
         file = try
-            read(`./lib/bin/rinha $(val)`, String)
+            endswith(".rinha")(val) ? read(`./lib/bin/rinha $(val)`, String) : read(val, String)
         catch e
             error("read error: $e")
         end
@@ -58,4 +58,4 @@ function main()
     wait(handle)
 end
 
-@time @elapsed main()
+@time main()
