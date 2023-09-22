@@ -62,6 +62,22 @@ end
         else
             throw(ErrorException("tipo inválido"))
         end
+    elseif term isa _Tuple
+        return (eval_core(term.first, scope), eval_core(term.second, scope))
+    elseif term isa _First
+        value = eval_core(term.value, scope)
+        if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
+            return value[1]
+        else
+            throw(ErrorException("tipo inválido"))
+        end
+    elseif term isa _Second
+        value = eval_core(term.value, scope)
+        if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
+            return value[2]
+        else
+            throw(ErrorException("tipo inválido"))
+        end
     elseif term isa _Error
         throw(ErrorException(term.message))
     else

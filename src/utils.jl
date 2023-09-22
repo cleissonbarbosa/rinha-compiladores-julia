@@ -54,6 +54,12 @@ function parse_json_ast_to_term(json_ast::Dict)::Term
         return _First(parse_json_ast_to_term(json_ast["value"]), Location(json_ast["location"]["start"], json_ast["location"]["end"], json_ast["location"]["filename"]))
     elseif json_ast["kind"] == "Second"
         return _Second(parse_json_ast_to_term(json_ast["value"]), Location(json_ast["location"]["start"], json_ast["location"]["end"], json_ast["location"]["filename"]))
+    elseif json_ast["kind"] == "Tuple"
+        return _Tuple(
+            parse_json_ast_to_term(json_ast["first"]),
+            parse_json_ast_to_term(json_ast["second"]),
+            Location(json_ast["location"]["start"], json_ast["location"]["end"], json_ast["location"]["filename"])
+        )
     else
         throw(ErrorException("unknown kind"))
     end

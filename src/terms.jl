@@ -74,7 +74,7 @@ struct _First <: Term
     value::Term
     location::Location
 end
-struct _Second
+struct _Second <: Term
     value::Term
     location::Location
 end

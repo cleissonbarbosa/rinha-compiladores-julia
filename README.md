@@ -25,7 +25,7 @@ julia -e 'import Pkg; Pkg.add("JSON")'
 ```
 1. Run
 ```bash
-julia main.jl --file="./data/fib.rinha"
+make run file='./examples/fib.json'
 ```
 ---
 
