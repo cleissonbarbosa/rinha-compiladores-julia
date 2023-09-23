@@ -23,6 +23,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Build and run docker image
+
+    - name: Build and test
       run: |
-        docker build -t rinha . 2> build.log && docker run rinha
+        docker compose up -d --build --remove-orphans && docker-compose logs -f
