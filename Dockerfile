@@ -1,4 +1,4 @@
-FROM julia:latest
+FROM julia:1.6.7-bullseye
 
 WORKDIR /app
 COPY ./src /app
