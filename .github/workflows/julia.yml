@@ -24,6 +24,10 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Build and test
+    - name: Build
       run: |
-        docker compose up -d --build --remove-orphans && docker-compose logs -f
+        docker compose up -d --build --remove-orphans
+
+    - name: View Results
+      run: |
+        docker-compose logs -f
