@@ -15,12 +15,12 @@ end
         return Bool(term.value)
     elseif term isa _Print
         __value = eval_core(term.value, scope)
-        if __value isa Int || __value isa Bool || __value isa String
-            print(__value)
+        if __value isa Int || __value isa Bool || __value isa String || __value isa Tuple || __value isa NamedTuple || __value isa Array
+            println(__value)
+            return __value
         else
             throw(ErrorException("tipo inválido"))
         end
-        return nothing
     elseif term isa _Binary
         return eval_bin(term, scope)
     elseif term isa _If
@@ -31,7 +31,16 @@ end
             throw(ErrorException("tipo inválido"))
         end
     elseif term isa _Let
+        name = term.name.text
         value = eval_core(term.value, scope)
+
+        if value isa Closure 
+            closure = Closure(value.body, value.params, scope)
+            value.env[name] = closure
+            scope[name] = closure
+        elseif value isa _Var
+            scope[name] = eval_core(value, scope)
+        end
         new_scope = copy(scope)
         new_scope[term.name.text] = value
         return eval_core(term.next, new_scope)
@@ -45,20 +54,23 @@ end
         return Closure(term.value, term.parameters, scope)
     elseif term isa _Call
         callee_value = eval_core(term.callee, scope)
-    
         if callee_value isa Closure
+
+            if length(term.arguments) != length(callee_value.params)
+                throw(ErrorException("número de argumentos inválido"))
+            end
+
             body = callee_value.body
             params = callee_value.params
             env = callee_value.env
             
-            new_scope = copy(scope)
+            new_scope = copy(env)
             
             for (param, arg) ∈ zip(params, term.arguments)
                 new_scope[param.text] = eval_core(arg, scope)
             end
             
-            result = eval_core(body, new_scope)
-            return result
+            return eval_core(body, new_scope)
         else
             throw(ErrorException("tipo inválido"))
         end

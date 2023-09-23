@@ -44,13 +44,6 @@ function main()
             catch e
                 error("evaluation error: $e")
             end
-
-            if string(val) == "nothing"
-                print("\n\n")
-                return
-            end
-
-            println("$val\n\n")
         end
     catch e
         error("thread error: $e")
