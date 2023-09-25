@@ -6,6 +6,10 @@ struct Closure
     env::Dict{String, Any}
 end
 
+function Base.show(io::IO, closure::Closure)
+    print(io, "<#closure>")
+end
+
 @noinline function eval_core(term::Term, scope::Dict{String, Any})
     if term isa _Int
         return term.value
@@ -103,14 +107,8 @@ function eval_bin(bin::_Binary, scope::Dict{String, Any})
         rhs = eval_core(bin.rhs, scope)
         if lhs isa Int && rhs isa Int
             return lhs + rhs
-        elseif lhs isa String && rhs isa String
-            return string(lhs, rhs)
-        elseif lhs isa String && rhs isa Int
-            return string(lhs, rhs)
-        elseif lhs isa Int && rhs isa String
-            return string(lhs, rhs)
         else
-            throw(ErrorException("tipo inválido"))
+            return string(lhs, rhs)
         end
     elseif bin.op == Terms.Sub
         return eval_core(bin.lhs, scope) - eval_core(bin.rhs, scope)
