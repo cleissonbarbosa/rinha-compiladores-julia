@@ -10,27 +10,33 @@ function Base.show(io::IO, closure::Closure)
     print(io, "<#closure>")
 end
 
+cache = Dict{Tuple, Any}()
 @noinline function eval_core(term::Term, scope::Dict{String, Any})
-    if term isa _Int
-        return term.value
+
+    if haskey(cache, (term, scope))
+        return cache[(term, scope)]
+    end
+
+    result = if term isa _Int
+        term.value
     elseif term isa _Str
-        return term.value
+        term.value
     elseif term isa _Bool
-        return Bool(term.value)
+        Bool(term.value)
     elseif term isa _Print
         __value = eval_core(term.value, scope)
         if __value isa Int || __value isa Bool || __value isa String || __value isa Tuple || __value isa NamedTuple || __value isa Array
             println(__value)
-            return __value
+            __value
         else
             throw(ErrorException("tipo inválido"))
         end
     elseif term isa _Binary
-        return eval_bin(term, scope)
+        eval_bin(term, scope)
     elseif term isa _If
         condition_value = eval_core(term.condition, scope)
         if condition_value isa Bool
-            return condition_value ? eval_core(term.then, scope) : eval_core(term.otherwise, scope)
+            condition_value ? eval_core(term.then, scope) : eval_core(term.otherwise, scope)
         else
             throw(ErrorException("tipo inválido"))
         end
@@ -47,15 +53,15 @@ end
         end
         new_scope = copy(scope)
         new_scope[term.name.text] = value
-        return eval_core(term.next, new_scope)
+        eval_core(term.next, new_scope)
     elseif term isa _Var
         if haskey(scope, term.text)
-            return scope[term.text]
+            scope[term.text]
         else
             throw(ErrorException("variável não definida"))
         end
     elseif term isa _Function
-        return Closure(term.value, term.parameters, scope)
+        Closure(term.value, term.parameters, scope)
     elseif term isa _Call
         callee_value = eval_core(term.callee, scope)
         if callee_value isa Closure
@@ -74,23 +80,23 @@ end
                 new_scope[param.text] = eval_core(arg, scope)
             end
             
-            return eval_core(body, new_scope)
+            eval_core(body, new_scope)
         else
             throw(ErrorException("tipo inválido"))
         end
     elseif term isa _Tuple
-        return (eval_core(term.first, scope), eval_core(term.second, scope))
+        (eval_core(term.first, scope), eval_core(term.second, scope))
     elseif term isa _First
         value = eval_core(term.value, scope)
         if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
-            return value[1]
+            value[1]
         else
             throw(ErrorException("tipo inválido"))
         end
     elseif term isa _Second
         value = eval_core(term.value, scope)
         if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
-            return value[2]
+            value[2]
         else
             throw(ErrorException("tipo inválido"))
         end
@@ -99,6 +105,9 @@ end
     else
         throw(ErrorException("tipo inválido"))
     end
+
+    cache[(term, scope)] = result
+    return result
 end
 
 function eval_bin(bin::_Binary, scope::Dict{String, Any})
