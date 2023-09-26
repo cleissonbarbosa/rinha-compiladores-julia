@@ -11,10 +11,12 @@ function Base.show(io::IO, closure::Closure)
 end
 
 cache = Dict{Tuple, Any}()
-@noinline function eval_core(term::Term, scope::Dict{String, Any})
 
-    if haskey(cache, (term, scope))
-        return cache[(term, scope)]
+@noinline function eval_core(term::Term, scope::Dict{String, Any})
+    key = (term, scope)
+
+    if haskey(cache, key)
+        return cache[key]
     end
 
     result = if term isa _Int
@@ -106,7 +108,7 @@ cache = Dict{Tuple, Any}()
         throw(ErrorException("tipo inválido"))
     end
 
-    cache[(term, scope)] = result
+    cache[key] = result
     return result
 end
 
