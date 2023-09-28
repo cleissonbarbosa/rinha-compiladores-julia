@@ -1,5 +1,6 @@
 using ErrorTypes
 using .Terms
+using Match
 struct Closure
     body::Term
     params::AbstractVector{_Var}
@@ -19,93 +20,22 @@ function eval_core(term::Term, scope::Dict{String, Any})
         return cache[key]
     end
 
-    result = if term isa _Int
-        term.value
-    elseif term isa _Str
-        term.value
-    elseif term isa _Bool
-        Bool(term.value)
-    elseif term isa _Print
-        __value = eval_core(term.value, scope)
-        if __value isa Int || __value isa Bool || __value isa String || __value isa Tuple || __value isa NamedTuple || __value isa Array
-            println(__value)
-            __value
-        else
-            throw(ErrorException("tipo inválido"))
-        end
-    elseif term isa _Binary
-        eval_bin(term, scope)
-    elseif term isa _If
-        condition_value = eval_core(term.condition, scope)
-        if condition_value isa Bool
-            condition_value ? eval_core(term.then, scope) : eval_core(term.otherwise, scope)
-        else
-            throw(ErrorException("tipo inválido"))
-        end
-    elseif term isa _Let
-        name = term.name.text
-        value = eval_core(term.value, scope)
-
-        if value isa Closure 
-            closure = Closure(value.body, value.params, scope)
-            value.env[name] = closure
-            scope[name] = closure
-        elseif value isa _Var
-            scope[name] = eval_core(value, scope)
-        end
-        new_scope = copy(scope)
-        new_scope[term.name.text] = value
-        eval_core(term.next, new_scope)
-    elseif term isa _Var
-        if haskey(scope, term.text)
-            scope[term.text]
-        else
-            throw(ErrorException("variável não definida"))
-        end
-    elseif term isa _Function
-        Closure(term.value, term.parameters, scope)
-    elseif term isa _Call
-        callee_value = eval_core(term.callee, scope)
-        if callee_value isa Closure
-
-            if length(term.arguments) != length(callee_value.params)
-                throw(ErrorException("número de argumentos inválido"))
-            end
-
-            body = callee_value.body
-            params = callee_value.params
-            env = callee_value.env
-            
-            new_scope = copy(env)
-            
-            for (param, arg) ∈ zip(params, term.arguments)
-                new_scope[param.text] = eval_core(arg, scope)
-            end
-            
-            eval_core(body, new_scope)
-        else
-            throw(ErrorException("tipo inválido"))
-        end
-    elseif term isa _Tuple
-        (eval_core(term.first, scope), eval_core(term.second, scope))
-    elseif term isa _First
-        value = eval_core(term.value, scope)
-        if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
-            value[1]
-        else
-            throw(ErrorException("tipo inválido"))
-        end
-    elseif term isa _Second
-        value = eval_core(term.value, scope)
-        if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
-            value[2]
-        else
-            throw(ErrorException("tipo inválido"))
-        end
-    elseif term isa _Error
-        throw(ErrorException(term.message))
-    else
-        throw(ErrorException("tipo inválido"))
+    result = @match term begin
+        t::_Int => t.value
+        t::_Str => t.value
+        t::_Bool => Bool(t.value)
+        t::_Print => eval_print(t, scope)
+        t::_Binary => eval_bin(t, scope)
+        t::_If => eval_if(t, scope)
+        t::_Let => eval_let(t, scope)
+        t::_Var => haskey(scope, t.text) ? scope[t.text] : throw(ErrorException("variável não definida"))
+        t::_Function => Closure(t.value, t.parameters, scope)
+        t::_Call => eval_call(t, scope)
+        t::_Tuple => (eval_core(t.first, scope), eval_core(t.second, scope))
+        t::_First => eval_first(t, scope)
+        t::_Second => eval_second(t, scope)
+        t::_Error => throw(ErrorException(t.message))
+        _ => throw(ErrorException("tipo inválido"))
     end
 
     cache[key] = result
@@ -149,4 +79,74 @@ function eval_bin(bin::_Binary, scope::Dict{String, Any})
         throw(ErrorException("unknown binary operator"))
     end
 end
+
+function eval_print(term::Term, scope::Dict{String, Any})
+    __value = eval_core(term.value, scope)
+    if __value isa Int || __value isa Bool || __value isa String || __value isa Tuple || __value isa NamedTuple || __value isa Array
+        println(__value)
+        return __value
+    end
+    throw(ErrorException("tipo inválido"))
+end
+
+function eval_if(term::Term, scope::Dict{String, Any})
+    condition_value = eval_core(term.condition, scope)
+    if condition_value isa Bool
+        return condition_value ? eval_core(term.then, scope) : eval_core(term.otherwise, scope)
+    end
+    throw(ErrorException("tipo inválido"))
+end
+
+function eval_let(term::Term, scope::Dict{String, Any})
+    name = term.name.text
+    value = eval_core(term.value, scope)
+
+    if value isa Closure 
+        closure = Closure(value.body, value.params, scope)
+        value.env[name] = closure
+        scope[name] = closure
+    elseif value isa _Var
+        scope[name] = eval_core(value, scope)
+    end
+    new_scope = scope
+    new_scope[term.name.text] = value
+    return eval_core(term.next, new_scope)
+end
+
+function eval_call(term::Term, scope::Dict{String, Any}) 
+    callee_value = eval_core(term.callee, scope)
+    if callee_value isa Closure
+        if length(term.arguments) != length(callee_value.params)
+            throw(ErrorException("número de argumentos inválido"))
+        end
+
+        body = callee_value.body
+        params = callee_value.params
+        env = callee_value.env
         
+        new_scope = copy(env)
+        
+        for (param, arg) ∈ zip(params, term.arguments)
+            new_scope[param.text] = eval_core(arg, scope)
+        end
+        
+        return eval_core(body, new_scope)
+    end
+    throw(ErrorException("tipo inválido"))
+end
+
+function eval_first(term::Term,  scope::Dict{String, Any}) 
+    value = eval_core(term.value, scope)
+    if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
+        return value[1]
+    end
+    throw(ErrorException("tipo inválido"))
+end
+
+function eval_second(term::Term,  scope::Dict{String, Any}) 
+    value = eval_core(term.value, scope)
+    if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
+        return value[2]
+    end
+    throw(ErrorException("tipo inválido"))
+end

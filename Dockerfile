@@ -8,6 +8,7 @@ COPY ./lib /app/lib
 RUN julia -e 'import Pkg; Pkg.add("ArgParse")'
 RUN julia -e 'import Pkg; Pkg.add("ErrorTypes")'
 RUN julia -e 'import Pkg; Pkg.add("JSON")'
+RUN julia -e 'import Pkg; Pkg.add("Match")'
 
 ENV JULIA_PKGDIR=/app/.julia
 ENV JULIA_NUM_THREADS=4
