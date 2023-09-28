@@ -12,7 +12,7 @@ end
 
 cache = Dict{Tuple, Any}()
 
-@noinline function eval_core(term::Term, scope::Dict{String, Any})
+function eval_core(term::Term, scope::Dict{String, Any})
     key = (term, scope)
 
     if haskey(cache, key)
