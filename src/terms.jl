@@ -35,7 +35,7 @@ end
 abstract type Term end
 
 struct _Int <: Term
-    value::Int64
+    value::Int
     location::Location
 end
 struct _Str <: Term

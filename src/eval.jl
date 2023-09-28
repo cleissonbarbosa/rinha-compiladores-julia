@@ -7,11 +7,19 @@ struct Closure
     env::Dict{String, Any}
 end
 
+const MAX_CACHE_SIZE = 100
+
 function Base.show(io::IO, closure::Closure)
     print(io, "<#closure>")
 end
 
 cache = Dict{Tuple, Any}()
+function add_to_cache(key::Tuple{Term, Dict{String, Any}}, value)
+    if length(cache) >= MAX_CACHE_SIZE
+        pop!(cache)
+    end
+    cache[key] = value
+end
 
 function eval_core(term::Term, scope::Dict{String, Any})
     key = (term, scope)
@@ -38,7 +46,8 @@ function eval_core(term::Term, scope::Dict{String, Any})
         _ => throw(ErrorException("tipo inválido"))
     end
 
-    cache[key] = result
+    #cache[key] = result
+    add_to_cache(key, result)
     return result
 end
 
