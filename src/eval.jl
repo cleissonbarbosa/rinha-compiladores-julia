@@ -1,6 +1,8 @@
 using ErrorTypes
 using .Terms
 using Match
+using Memoization
+
 struct Closure
     body::Term
     params::AbstractVector{_Var}
@@ -13,7 +15,7 @@ end
 
 cache = Dict{Tuple, Any}()
 
-function eval_core(term::Term, scope::Dict{String, Any})
+@memoize function eval_core(term::Term, scope::Dict{String, Any})
     key = (term, scope)
 
     if haskey(cache, key)
@@ -42,7 +44,7 @@ function eval_core(term::Term, scope::Dict{String, Any})
     return result
 end
 
-function eval_bin(bin::_Binary, scope::Dict{String, Any})
+@memoize function eval_bin(bin::_Binary, scope::Dict{String, Any})
     if bin.op == Terms.Add
         lhs = eval_core(bin.lhs, scope)
         rhs = eval_core(bin.rhs, scope)
@@ -97,7 +99,7 @@ function eval_if(term::Term, scope::Dict{String, Any})
     throw(ErrorException("tipo inválido"))
 end
 
-function eval_let(term::Term, scope::Dict{String, Any})
+@memoize function eval_let(term::Term, scope::Dict{String, Any})
     name = term.name.text
     value = eval_core(term.value, scope)
 
@@ -113,7 +115,7 @@ function eval_let(term::Term, scope::Dict{String, Any})
     return eval_core(term.next, new_scope)
 end
 
-function eval_call(term::Term, scope::Dict{String, Any}) 
+@memoize function eval_call(term::Term, scope::Dict{String, Any}) 
     callee_value = eval_core(term.callee, scope)
     if callee_value isa Closure
         if length(term.arguments) != length(callee_value.params)
