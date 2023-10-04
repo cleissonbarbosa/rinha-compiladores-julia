@@ -13,16 +13,8 @@ function Base.show(io::IO, closure::Closure)
     print(io, "<#closure>")
 end
 
-cache = Dict{Tuple, Any}()
-
 @memoize function eval_core(term::Term, scope::Dict{String, Any})
-    key = (term, scope)
-
-    if haskey(cache, key)
-        return cache[key]
-    end
-
-    result = @match term begin
+    @match term begin
         t::_Int => t.value
         t::_Str => t.value
         t::_Bool => Bool(t.value)
@@ -34,17 +26,14 @@ cache = Dict{Tuple, Any}()
         t::_Function => Closure(t.value, t.parameters, scope)
         t::_Call => eval_call(t, scope)
         t::_Tuple => (eval_core(t.first, scope), eval_core(t.second, scope))
-        t::_First => eval_first(t, scope)
-        t::_Second => eval_second(t, scope)
+        t::_First => eval_position(t, scope, 1)
+        t::_Second => eval_position(t, scope, 2)
         t::_Error => throw(ErrorException(t.message))
         _ => throw(ErrorException("tipo inválido"))
     end
-
-    cache[key] = result
-    return result
 end
 
-@memoize function eval_bin(bin::_Binary, scope::Dict{String, Any})
+function eval_bin(bin::_Binary, scope::Dict{String, Any})
     if bin.op == Terms.Add
         lhs = eval_core(bin.lhs, scope)
         rhs = eval_core(bin.rhs, scope)
@@ -99,7 +88,7 @@ function eval_if(term::Term, scope::Dict{String, Any})
     throw(ErrorException("tipo inválido"))
 end
 
-@memoize function eval_let(term::Term, scope::Dict{String, Any})
+function eval_let(term::Term, scope::Dict{String, Any})
     name = term.name.text
     value = eval_core(term.value, scope)
 
@@ -115,7 +104,7 @@ end
     return eval_core(term.next, new_scope)
 end
 
-@memoize function eval_call(term::Term, scope::Dict{String, Any}) 
+function eval_call(term::Term, scope::Dict{String, Any}) 
     callee_value = eval_core(term.callee, scope)
     if callee_value isa Closure
         if length(term.arguments) != length(callee_value.params)
@@ -137,18 +126,13 @@ end
     throw(ErrorException("tipo inválido"))
 end
 
-function eval_first(term::Term,  scope::Dict{String, Any}) 
-    value = eval_core(term.value, scope)
-    if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
-        return value[1]
+function eval_position(term::Term,  scope::Dict{String, Any}, position::Int) 
+    if position != 1 && position != 2
+        throw(ErrorException("posição inválida"))
     end
-    throw(ErrorException("tipo inválido"))
-end
-
-function eval_second(term::Term,  scope::Dict{String, Any}) 
     value = eval_core(term.value, scope)
     if value isa Tuple || value isa NamedTuple || value isa Array || value isa String
-        return value[2]
+        return value[position]
     end
     throw(ErrorException("tipo inválido"))
 end

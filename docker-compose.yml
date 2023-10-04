@@ -5,3 +5,5 @@ services:
     build: .
     volumes:
       - ./examples/source.rinha.json:/var/rinha/source.rinha.json
+    cpus: 2
+    mem_limit: 2g
