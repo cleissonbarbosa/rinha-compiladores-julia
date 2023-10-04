@@ -1,7 +1,6 @@
 using ErrorTypes
 using .Terms
 using Match
-using Memoization
 
 struct Closure
     body::Term
@@ -13,7 +12,7 @@ function Base.show(io::IO, closure::Closure)
     print(io, "<#closure>")
 end
 
-@memoize function eval_core(term::Term, scope::Dict{String, Any})
+function eval_core(term::Term, scope::Dict{String, Any})
     @match term begin
         t::_Int => t.value
         t::_Str => t.value
